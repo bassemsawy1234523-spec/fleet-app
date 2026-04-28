@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الأسطول الذهبي - باسم الصاوي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        :root { --gold: #d4af37; --navy: #050a18; --bg: #f4f7f6; --white: #ffffff; --red: #e11d48; --green: #10b981; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: var(--bg); margin: 0; padding-bottom: 100px; direction: rtl; }
+        
+        /* شاشة الدخول */
+        #login_screen { position: fixed; inset: 0; background: var(--navy); z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .login-card { width: 90%; max-width: 400px; text-align: center; border: 2px solid var(--gold); padding: 40px 20px; border-radius: 25px; background: rgba(255,255,255,0.05); color: var(--gold); }
+        .login-card input { width: 100%; padding: 15px; margin: 20px 0; border-radius: 12px; border: 1px solid var(--gold); background: transparent; color: #fff; text-align: center; font-size: 24px; }
+        .login-card button { background: var(--gold); color: var(--navy); border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+
+        .header { background: var(--navy); color: var(--gold); padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); position: sticky; top: 0; z-index: 100; }
+        .tab-content { display: none; padding: 15px; }
+        .tab-content.active { display: block; }
+
+        .card { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-right: 6px solid var(--gold); }
+        h3 { color: var(--navy); margin: 0 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #444; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; }
+        
+        .btn-main { background: var(--navy); color: var(--gold); border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .table-container { overflow-x: auto; border-radius: 15px; }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 700px; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; font-size: 13px; }
+        th { background: #f8f9fa; color: var(--navy); }
+        
+        .action-btns i { cursor: pointer; margin: 0 8px; font-size: 16px; }
+        .fa-trash { color: var(--red); } .fa-edit { color: #2563eb; } .fa-whatsapp { color: #25d366; } .fa-map-marked-alt { color: var(--green); }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--navy); display: flex; border-top: 3px solid var(--gold); z-index: 1000; height: 75px; }
+        .nav-item { color: #fff; text-align: center; opacity: 0.5; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
+        .nav-item.active { opacity: 1; color: var(--gold); }
+        .nav-item i { font-size: 20px; margin-bottom: 5px; }
+        .nav-item span { font-size: 10px; }
+
+        .rent-details { display: none; background: #fffcf2; border: 1px dashed var(--gold); padding: 15px; border-radius: 12px; margin-top: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="login_screen">
+        <div class="login-card">
+            <i class="fas fa-crown" style="font-size: 50px; margin-bottom: 20px;"></i>
+            <h2>الأسطول الذهبي</h2>
+            <input type="password" id="admin_pass_input" placeholder="كلمة السر">
+            <button onclick="authAdmin()">دخول النظام</button>
+        </div>
+    </div>
+
+    <div class="header"><h3>الأسطول الذهبي - إدارة المالك 👑</h3></div>
+
+    <div id="tab_drivers" class="tab-content active">
+        <div class="card">
+            <h3>تسجيل سائق</h3>
+            <input type="hidden" id="d_id">
+            <div class="form-group"><label>صورة السائق</label><input type="file" id="d_img"></div>
+            <div class="form-group"><label>اسم السائق</label><input type="text" id="d_name"></div>
+            <div class="form-group"><label>رقم الموبايل</label><input type="tel" id="d_phone"></div>
+            <div class="form-group"><label>السن</label><input type="number" id="d_age"></div>
+            <div class="form-group"><label>العنوان</label><input type="text" id="d_addr"></div>
+            <div class="form-group"><label>نسبة السائق (%)</label><input type="number" id="d_ratio"></div>
+            <div id="extra_d"></div>
+            <button onclick="addExtra('extra_d')" style="color:var(--gold); background:none; border:none; cursor:pointer;">+ إضافة بيان آخر</button>
+            <button class="btn-main" onclick="saveData('drivers')">حفظ السائق</button>
+        </div>
+        <div class="card">
+            <h3>سجل السائقين</h3>
+            <div class="table-container"><table><thead><tr><th>الاسم</th><th>الموبايل</th><th>النسبة</th><th>إدارة</th></tr></thead><tbody id="list_drivers"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="tab_cars" class="tab-content">
+        <div class="card">
+            <h3>تسجيل سيارة</h3>
+            <input type="hidden" id="c_id">
+            <div class="form-group"><label>ملكية السيارة</label><select id="c_owner" onchange="toggleRent(this.value)"><option value="ملك">ملك</option><option value="إيجار">إيجار</option></select></div>
+            <div id="rent_box" class="rent-details">
+                <div class="form-group"><label>اسم المالك</label><input type="text" id="c_owner_name"></div>
+                <div class="form-group"><label>رقم المالك</label><input type="tel" id="c_owner_phone"></div>
+                <div class="form-group"><label>قيمة الإيجار</label><input type="number" id="c_rent_val"></div>
+                <div class="form-group"><label>يوم الدفع</label><input type="number" id="c_rent_day"></div>
+            </div>
+            <div class="form-group"><label>رقم اللوحة</label><input type="text" id="c_plate"></div>
+            <div class="form-group"><label>الماركة</label><input type="text" id="c_brand" list="brands"></div>
+            <div class="form-group"><label>الطراز</label><input type="text" id="c_model" list="models"></div>
+            <div class="form-group"><label>الموديل (السنة)</label><input type="number" id="c_year"></div>
+            <button class="btn-main" onclick="saveData('cars')">حفظ السيارة</button>
+        </div>
+        <div class="card">
+            <h3>سجل السيارات</h3>
+            <div class="table-container"><table><thead><tr><th>اللوحة</th><th>الماركة</th><th>النوع</th><th>تنبيه</th><th>إدارة</th></tr></thead><tbody id="list_cars"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="tab_clients" class="tab-content">
+        <div class="card">
+            <h3>إضافة عميل</h3>
+            <input type="hidden" id="cli_id">
+            <div class="form-group"><label>اسم العميل</label><input type="text" id="cli_name"></div>
+            <div class="form-group"><label>رقم العميل</label><input type="tel" id="cli_phone"></div>
+            <div id="cli_locs"><div class="form-group"><label>الموقع (رابط ماب)</label><input type="text" class="cli-loc"></div></div>
+            <button onclick="addLoc()" style="color:var(--gold); background:none; border:none; cursor:pointer;">+ إضافة موقع آخر</button>
+            <button class="btn-main" onclick="saveData('clients')">حفظ العميل</button>
+        </div>
+        <div class="card">
+            <h3>سجل العملاء</h3>
+            <div class="table-container"><table><thead><tr><th>الاسم</th><th>الموبايل</th><th>المواقع</th><th>إدارة</th></tr></thead><tbody id="list_clients"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="tab_reports" class="tab-content">
+        <div class="card">
+            <div class="stats-grid">
+                <div class="stat-box"><small>عدد الرحلات</small><br><b id="rep_count">0</b></div>
+                <div class="stat-box"><small>الصافي (جنية)</small><br><b id="rep_net">0</b></div>
+            </div>
+            <div class="form-group"><label>الفترة</label><select id="f_p" onchange="toggleDates(this.value)"><option value="all">كل الوقت</option><option value="day">يوم</option><option value="range">فترة</option></select></div>
+            <div id="f_dates" style="display:none; gap:5px; margin-bottom:10px;"><input type="date" id="f_s"> <input type="date" id="f_e" style="display:none;"></div>
+            <div class="form-group"><label>السائق</label><select id="f_d"><option value="">كل السائقين</option></select></div>
+            <div class="form-group"><label>السيارة</label><select id="f_c"><option value="">كل السيارات</option></select></div>
+            <button class="btn-main" onclick="runReport()">بحث في التقارير 🔍</button>
+        </div>
+        <div class="card">
+            <h3>التقرير التفصيلي</h3>
+            <div class="table-container"><table><thead><tr><th>التاريخ</th><th>السائق</th><th>السيارة</th><th>الإيراد</th><th>مصاريف</th><th>الإجمالي</th><th>النسبة</th><th>الصافي</th><th>إدارة</th></tr></thead><tbody id="list_reports"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="tab_settings" class="tab-content">
+        <div class="card" style="text-align:center;">
+            <h3>الإعدادات</h3>
+            <div class="form-group"><label>كلمة سر جديدة</label><input type="text" id="new_pass"></div>
+            <button class="btn-main" onclick="updatePass()">تحديث كلمة السر 🔐</button>
+            <button class="btn-main" style="background:var(--red); margin-top:20px;" onclick="location.reload()">تسجيل خروج 🚪</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showTab('tab_drivers', this)"><i class="fas fa-user-tie"></i><span>السائقين</span></div>
+        <div class="nav-item" onclick="showTab('tab_cars', this)"><i class="fas fa-car"></i><span>السيارات</span></div>
+        <div class="nav-item" onclick="showTab('tab_clients', this)"><i class="fas fa-users"></i><span>العملاء</span></div>
+        <div class="nav-item" onclick="showTab('tab_reports', this)"><i class="fas fa-chart-bar"></i><span>التقارير</span></div>
+        <div class="nav-item" onclick="showTab('tab_settings', this)"><i class="fas fa-cog"></i><span>الإعدادات</span></div>
+    </div>
+
+    <datalist id="brands"><option value="هيونداي"><option value="تويوتا"><option value="نيسان"></datalist>
+    <datalist id="models"><option value="أكسنت RB"><option value="إلنترا"><option value="كورولا"></datalist>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyAsS-q848fEIsY-Zk86pL1K6eS4C_eCisU", databaseURL: "https://fleetsmart-2513b-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let adminPass = "6352";
+        db.ref('settings/adminPass').on('value', s => { if(s.exists()) adminPass = s.val(); });
+
+        function authAdmin() {
+            if(document.getElementById('admin_pass_input').value === adminPass) {
+                document.getElementById('login_screen').style.display = 'none';
+                initData();
+            } else { alert("خطأ!"); }
+        }
+
+        function showTab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active'); el.classList.add('active');
+            if(id === 'tab_reports') runReport();
+        }
+
+        function toggleRent(v) { document.getElementById('rent_box').style.display = (v === 'إيجار' ? 'block' : 'none'); }
+        function toggleDates(v) { document.getElementById('f_dates').style.display = (v==='all'?'none':'flex'); document.getElementById('f_e').style.display = (v==='range'?'block':'none'); }
+        function addLoc() { document.getElementById('cli_locs').innerHTML += `<input type="text" class="cli-loc" style="margin-top:5px">`; }
+
+        function saveData(path) {
+            let data = {}, id = "";
+            if(path === 'drivers') { id = document.getElementById('d_id').value; data = { name: document.getElementById('d_name').value, phone: document.getElementById('d_phone').value, ratio: document.getElementById('d_ratio').value }; }
+            else if(path === 'cars') { id = document.getElementById('c_id').value; data = { plate: document.getElementById('c_plate').value, owner: document.getElementById('c_owner').value, brand: document.getElementById('c_brand').value, rentDay: document.getElementById('c_rent_day').value }; }
+            else if(path === 'clients') { id = document.getElementById('cli_id').value; data = { name: document.getElementById('cli_name').value, phone: document.getElementById('cli_phone').value, locs: Array.from(document.querySelectorAll('.cli-loc')).map(i => i.value) }; }
+
+            if(id) db.ref(path+"/"+id).update(data).then(()=>alert("تم التعديل ✅"));
+            else db.ref(path).push(data).then(()=>alert("تم الحفظ ✅"));
+            location.reload();
+        }
+
+        function initData() {
+            db.ref('drivers').on('value', s => {
+                const list = document.getElementById('list_drivers'), sel = document.getElementById('f_d');
+                list.innerHTML = ""; sel.innerHTML = '<option value="">كل السائقين</option>';
+                s.forEach(c => {
+                    list.innerHTML += `<tr><td>${c.val().name}</td><td>${c.val().phone}</td><td>${c.val().ratio}%</td><td class="action-btns"><i class="fas fa-edit" onclick="editItem('drivers','${c.key}')"></i><i class="fas fa-trash" onclick="deleteItem('drivers','${c.key}')"></i></td></tr>`;
+                    sel.innerHTML += `<option value="${c.key}">${c.val().name}</option>`;
+                });
+            });
+
+            db.ref('cars').on('value', s => {
+                const list = document.getElementById('list_cars'), sel = document.getElementById('f_c');
+                list.innerHTML = ""; sel.innerHTML = '<option value="">كل السيارات</option>';
+                const today = new Date().getDate();
+                s.forEach(c => {
+                    let alert = (c.val().owner === 'إيجار' && c.val().rentDay - today <= 10) ? `<span style="color:red">باقي ${c.val().rentDay - today} يوم</span>` : "---";
+                    list.innerHTML += `<tr><td>${c.val().plate}</td><td>${c.val().brand}</td><td>${c.val().owner}</td><td>${alert}</td><td class="action-btns"><i class="fas fa-edit" onclick="editItem('cars','${c.key}')"></i><i class="fas fa-trash" onclick="deleteItem('cars','${c.key}')"></i></td></tr>`;
+                    sel.innerHTML += `<option value="${c.val().plate}">${c.val().plate}</option>`;
+                });
+            });
+
+            db.ref('clients').on('value', s => {
+                const list = document.getElementById('list_clients'); list.innerHTML = "";
+                s.forEach(c => {
+                    let locIcons = (c.val().locs || []).map(l => l.includes('http') ? `<a href="${l}" target="_blank"><i class="fas fa-map-marked-alt"></i></a>` : '').join(' ');
+                    list.innerHTML += `<tr><td>${c.val().name}</td><td>${c.val().phone}</td><td>${locIcons}</td><td class="action-btns"><i class="fas fa-edit" onclick="editItem('clients','${c.key}')"></i><i class="fas fa-trash" onclick="deleteItem('clients','${c.key}')"></i></td></tr>`;
+                });
+            });
+        }
+
+        function runReport() {
+            const fP = document.getElementById('f_p').value, fS = document.getElementById('f_s').value, fE = document.getElementById('f_e').value, fD = document.getElementById('f_d').value, fC = document.getElementById('f_c').value;
+            db.ref('trips').once('value', s => {
+                const list = document.getElementById('list_reports'); list.innerHTML = "";
+                let count = 0, netTotal = 0;
+                s.forEach(child => {
+                    const v = child.val(); const d = v.date.split('T')[0];
+                    if(fP === 'day' && d !== fS) return; if(fP === 'range' && (d < fS || d > fE)) return; if(fD && v.driverId !== fD) return; if(fC && v.car !== fC) return;
+                    
+                    let ex = v.expenses ? Object.values(v.expenses).reduce((a,b)=>a+Number(b.val), 0) : 0;
+                    let ratio = (v.amount * v.driverRatio) / 100;
+                    let final = v.amount - ex - ratio;
+                    count++; netTotal += final;
+                    list.innerHTML += `<tr><td>${d}</td><td>${v.driverName}</td><td>${v.car}</td><td style="color:green">${v.amount}</td><td style="color:red">${ex}</td><td>${v.amount-ex}</td><td>${ratio}</td><td style="font-weight:bold">${final.toFixed(0)}</td><td><i class="fas fa-trash" onclick="deleteItem('trips','${child.key}')"></i></td></tr>`;
+                });
+                document.getElementById('rep_count').innerText = count; document.getElementById('rep_net').innerText = netTotal.toFixed(0);
+            });
+        }
+
+        function deleteItem(p, id) { if(confirm("حذف؟")) db.ref(p+"/"+id).remove(); }
+        function editItem(p, id) { db.ref(p+"/"+id).once('value', s => { alert("تم تحميل البيانات، قم بالتعديل ثم احفظ"); window.scrollTo(0,0); }); }
+        function updatePass() { const p = document.getElementById('new_pass').value; if(p) db.ref('settings/adminPass').set(p).then(()=>alert("تم ✅")); }
+    </script>
+</body>
+      </html>
