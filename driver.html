@@ -9,317 +9,290 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        :root { --gold: #d4af37; --navy: #050a18; --bg: #f4f7f6; --white: #ffffff; --red: #e11d48; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; direction: rtl; }
+        :root { --gold: #d4af37; --navy: #050a18; --bg: #f8fafc; --white: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; direction: rtl; }
         
-        /* شاشة البدء الاحترافية */
-        #login_page { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(rgba(5, 10, 24, 0.85), rgba(5, 10, 24, 0.85)), 
-            url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1500'); 
-            background-size: cover; background-position: center;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000;
-        }
-        .login-box { background: rgba(255,255,255,0.98); padding: 30px; border-radius: 25px; width: 85%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center; }
+        /* شاشة البدء المحدثة */
+        #login_page { position: fixed; inset: 0; background: linear-gradient(135deg, var(--navy) 0%, #1a2a44 100%); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        .login-box { background: var(--white); padding: 25px; border-radius: 20px; width: 85%; max-width: 380px; text-align: center; border: 3px solid var(--gold); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
         
-        .tab-content { display: none; padding: 15px; padding-bottom: 80px; }
+        .tab-content { display: none; padding: 15px; animation: slideUp 0.3s ease-out; }
         .tab-content.active { display: block; }
-        .card { background: var(--white); border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-right: 6px solid var(--gold); }
-        
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--navy); font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; }
-        
-        .btn-main { background: var(--navy); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; border-top: 3px solid var(--gold); font-size: 16px; }
-        
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--navy); display: flex; justify-content: space-around; padding: 10px 0; border-top: 3px solid var(--gold); z-index: 1000; }
-        .nav-item { color: #fff; opacity: 0.5; text-align: center; flex: 1; cursor: pointer; font-size: 12px; }
-        .nav-item.active { opacity: 1; color: var(--gold); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .hidden-field { display: none; background: #fffcf0; padding: 10px; border: 1px dashed var(--gold); border-radius: 10px; margin-top: 10px; }
+        .card { background: var(--white); border-radius: 18px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border-right: 5px solid var(--gold); }
+        h3 { color: var(--navy); font-size: 15px; margin: 0 0 12px 0; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         
-        /* التقارير */
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-item { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 15px; text-align: center; border-bottom: 3px solid var(--gold); }
-        .trip-log-item { background: white; padding: 10px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; font-size: 13px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--navy); font-size: 12px; }
+        input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--gold); background: #fffdf9; }
+
+        .btn-main { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .btn-plus { background: var(--gold); color: var(--navy); border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--navy); display: flex; justify-content: space-around; padding: 10px 0; border-top: 3px solid var(--gold); z-index: 1000; }
+        .nav-item { color: #fff; opacity: 0.5; text-align: center; flex: 1; cursor: pointer; font-size: 10px; }
+        .nav-item.active { opacity: 1; color: var(--gold); }
+        .nav-item i { font-size: 22px; margin-bottom: 5px; }
+
+        .report-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .summary-item { background: var(--navy); color: var(--gold); padding: 12px; border-radius: 15px; text-align: center; border-bottom: 3px solid var(--gold); }
+        .summary-item b { font-size: 18px; display: block; }
+        .hidden-box { display: none; background: #fdfaf3; padding: 12px; border-radius: 12px; border: 1px dashed var(--gold); margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div id="login_page">
         <div class="login-box">
-            <h1 style="color: var(--navy); margin-bottom: 5px;">الأسطول الذهبي</h1>
-            <p style="color: #666; margin-bottom: 25px;">تطبيق إدارة الرحلات للسائقين</p>
-            <div class="form-group">
-                <label>اسم السائق</label>
-                <select id="sel_driver"><option value="">جاري تحميل السائقين...</option></select>
-            </div>
-            <div class="form-group">
-                <label>السيارة المستلمة</label>
-                <select id="sel_car"><option value="">جاري تحميل السيارات...</option></select>
-            </div>
-            <div class="form-group">
-                <label>كلمة السر</label>
-                <input type="password" id="login_pass" placeholder="مثلاً: 1234" style="text-align: center;">
-            </div>
-            <button class="btn-main" onclick="processLogin()">دخول للعمل <i class="fas fa-steering-wheel"></i></button>
+            <h2 style="color: var(--navy); margin-bottom: 20px;">الأسطول الذهبي ✨</h2>
+            <label>اسم السائق</label>
+            <select id="sel_driver" onkeydown="nextField(event, 'sel_car')"></select>
+            <br><br>
+            <label>السيارة</label>
+            <select id="sel_car" onkeydown="nextField(event, 'login_pass')"></select>
+            <br><br>
+            <label>كلمة السر</label>
+            <input type="password" id="login_pass" placeholder="1234" onkeydown="nextField(event, 'btn_login')">
+            <button id="btn_login" class="btn-main" onclick="doLogin()">دخول للعمل <i class="fas fa-steering-wheel"></i></button>
         </div>
     </div>
 
-    <div id="app_content" style="display:none;">
+    <div id="app" style="display:none;">
         
         <div id="tab_trip" class="tab-content active">
             <div class="card">
-                <h3><i class="fas fa-file-invoice"></i> بيانات الرحلة</h3>
-                <div class="form-group"><label>سعر الرحلة الإجمالي</label><input type="number" id="tAmount" placeholder="0.00"></div>
-                <div class="form-group"><label>التاريخ والوقت</label><input type="datetime-local" id="tDate"></div>
-                <div class="form-group">
-                    <label>حالة الرحلة</label>
-                    <select id="tStatus" onchange="updateCityInputs(this.value)">
-                        <option value="ذهاب وعودة">ذهاب وعودة</option>
-                        <option value="ذهاب فقط">ذهاب فقط</option>
-                        <option value="عودة فقط">عودة فقط</option>
-                        <option value="شغل داخلي">شغل داخلي</option>
-                    </select>
-                </div>
+                <h3><i class="fas fa-route"></i> تسجيل رحلة</h3>
+                <label>السعر الإجمالي للرحلة</label>
+                <input type="number" id="t_price" placeholder="0.00" onkeydown="nextField(event, 't_date')">
                 
-                <div id="city_single" class="form-group">
-                    <label>المحافظة</label><input type="text" list="egy_cities" placeholder="ابحث عن محافظة...">
-                </div>
-                <div id="city_double" class="form-group" style="display:none;">
-                    <label>من محافظة</label><input type="text" list="egy_cities" style="margin-bottom:8px;">
-                    <label>إلى محافظة</label><input type="text" list="egy_cities">
-                </div>
+                <label style="margin-top:10px;">التاريخ والوقت</label>
+                <input type="datetime-local" id="t_date" onkeydown="nextField(event, 't_status')">
 
-                <div class="form-group">
-                    <label>طريقة الدفع</label>
-                    <select id="tPayment"><option>كاش</option><option>إنستا باي</option><option>محفظة</option></select>
-                </div>
-                <div class="form-group">
-                    <label>التطبيق</label>
-                    <select id="tApp" onchange="checkSpecial(this.value)">
-                        <option>أوبر</option><option>إندرايفر</option><option>ديدي</option><option value="خاصة">رحلة خاصة</option>
-                    </select>
-                </div>
-                <div id="special_client_div" class="hidden-field">
-                    <label>عميل من السجلات / إضافة جديد</label>
-                    <input type="text" list="all_clients" placeholder="اسم العميل">
-                </div>
-            </div>
+                <label style="margin-top:10px;">حالة الرحلة</label>
+                <select id="t_status" onchange="toggleLocFields(this.value)">
+                    <option value="ذهاب وعوده">ذهاب وعودة (محافظة واحدة)</option>
+                    <option value="ذهاب فقط">ذهاب فقط (محافظتين)</option>
+                    <option value="عوده فقط">عودة فقط (محافظتين)</option>
+                    <option value="شغل داخلي">شغل داخلي (محافظة واحدة)</option>
+                </select>
 
-            <div class="card">
-                <h3><i class="fas fa-coins"></i> المصروفات</h3>
-                <div id="expense_list">
-                    <div class="form-group" style="border-bottom: 1px solid #eee; padding-bottom:10px;">
-                        <div style="display:flex; gap:5px;">
-                            <input type="number" class="exp-val" placeholder="المبلغ" style="flex:1">
-                            <select class="exp-type" onchange="checkExpOther(this)" style="flex:1">
-                                <option>بنزين</option><option>كارتة طريق</option><option>غيار زيت</option><option>أكل وخلافه</option><option value="أخرى">أخرى</option>
-                            </select>
-                        </div>
-                        <input type="text" class="exp-desc" placeholder="اكتب السبب أو التفاصيل..." style="display:none; margin-top:8px;">
+                <div id="loc_section" class="hidden-box" style="display:block;">
+                    <label>الوجهة (المحافظة)</label>
+                    <input type="text" list="provinces" id="loc1" placeholder="بحث...">
+                    <div id="loc2_div" style="display:none; margin-top:10px;">
+                        <label>إلى (المحافظة الثانية)</label>
+                        <input type="text" list="provinces" id="loc2" placeholder="بحث...">
                     </div>
                 </div>
-                <button onclick="addNewExpenseField()" style="background:none; border:none; color:var(--gold); font-weight:bold; cursor:pointer; padding:10px;">+ إضافة مصروف آخر</button>
-            </div>
-            <button class="btn-main" onclick="submitTrip()">إرسال البيانات للمالك ✅</button>
-        </div>
 
-        <div id="tab_reports" class="tab-content">
-            <div class="card">
-                <h3><i class="fas fa-chart-pie"></i> ملخص أرباحك (نسبتك)</h3>
-                <div class="stat-grid">
-                    <div class="stat-item"><small>اليوم</small><br><strong id="s_day">0</strong></div>
-                    <div class="stat-item"><small>الأسبوع</small><br><strong id="s_week">0</strong></div>
-                    <div class="stat-item"><small>الشهر</small><br><strong id="s_month">0</strong></div>
-                    <div class="stat-item"><small>السنة</small><br><strong id="s_year">0</strong></div>
+                <label style="margin-top:10px;">طريقة الدفع</label>
+                <select id="t_pay" onchange="togglePayFields(this.value)">
+                    <option>كاش</option><option>محفظة</option><option>إنستا باي</option>
+                </select>
+                <div id="pay_details" class="hidden-box">
+                    <div style="display:flex; gap:5px;">
+                        <select id="pay_accounts" style="flex:1"></select>
+                        <button class="btn-plus" onclick="addNewAccount('payment')">+</button>
+                    </div>
+                </div>
+
+                <label style="margin-top:10px;">التطبيق المستخدم</label>
+                <select id="t_app" onchange="toggleClientFields(this.value)">
+                    <option>أوبر</option><option>إندرايفر</option><option>ديدي</option><option value="خاصة">رحلة خاصة</option>
+                </select>
+                <div id="client_details" class="hidden-box">
+                    <div style="display:flex; gap:5px;">
+                        <select id="client_list" style="flex:1"></select>
+                        <button class="btn-plus" onclick="addNewAccount('client')">+</button>
+                    </div>
                 </div>
             </div>
 
             <div class="card">
-                <h3><i class="fas fa-search"></i> بحث في السجلات</h3>
-                <input type="date" id="filter_date" onchange="loadDriverLogs()" style="margin-bottom:10px;">
-                <input type="text" id="filter_car" placeholder="بحث باسم السيارة..." oninput="loadDriverLogs()">
+                <h3><i class="fas fa-wallet"></i> المصروفات والسحب</h3>
+                <div id="expenses_container">
+                    <div style="display:flex; gap:5px; margin-bottom:10px;">
+                        <input type="number" class="exp-amt" placeholder="المبلغ" style="flex:1">
+                        <select class="exp-type" style="flex:1" onchange="handleSiana(this)">
+                            <option>بنزين</option><option>أكل وخلافه</option><option>كارتة طريق</option>
+                            <option>غيار زيت</option><option value="صيانة">صيانة</option><option value="سحب">سحب نقدي</option><option>أخرى</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="siana_info" class="hidden-box"><label>تفاصيل الصيانة</label><input type="text" id="s_desc"></div>
+                <button onclick="addRow()" style="background:none; border:none; color:var(--gold); font-weight:bold;">+ إضافة مصروف آخر</button>
             </div>
-
-            <div id="driver_logs_container" style="margin-top:20px;">
-                <h4 style="margin-bottom:10px; color:var(--navy);">سجل الرحلات التفصيلي:</h4>
-                <div id="logs_list"></div>
-            </div>
+            <button class="btn-main" onclick="uploadTrip()">حفظ وتصدير البيانات ☁️</button>
         </div>
 
-        <div id="tab_settings" class="tab-content">
+        <div id="tab_rep" class="tab-content">
+            <div class="report-summary">
+                <div class="summary-item"><small>شغل السيارة</small><b id="sum_work">0</b></div>
+                <div class="summary-item"><small>نسبتي المقدرة</small><b id="sum_my">0</b></div>
+                <div class="summary-item"><small>سحب نقدي</small><b id="sum_draw">0</b></div>
+                <div class="summary-item" style="background:var(--gold); color:var(--navy);"><small>باقي لي</small><b id="sum_net">0</b></div>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-search"></i> كشف حساب وبحث</h3>
+                <label>بحث بتاريخ معين</label><input type="date" id="search_date" onchange="loadReports()">
+                <label style="margin-top:10px;">فلترة بالسيارة</label><select id="search_car" onchange="loadReports()"></select>
+                <div style="display:flex; gap:5px; margin-top:10px;">
+                    <button onclick="applyFilter('day')" style="flex:1; font-size:10px;">يومي</button>
+                    <button onclick="applyFilter('week')" style="flex:1; font-size:10px;">أسبوعي</button>
+                    <button onclick="applyFilter('month')" style="flex:1; font-size:10px;">شهري</button>
+                </div>
+            </div>
+            <div id="trips_log"></div>
+        </div>
+
+        <div id="tab_sec" class="tab-content">
             <div class="card" style="text-align:center;">
                 <div style="position:relative; display:inline-block;">
-                    <img id="profile_img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width:120px; height:120px; border-radius:50%; border:4px solid var(--gold); object-fit:cover;">
-                    <i class="fas fa-camera" style="position:absolute; bottom:5px; right:5px; background:var(--navy); color:white; padding:8px; border-radius:50%; font-size:12px;"></i>
+                    <img id="profile_img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width:110px; height:110px; border-radius:50%; border:3px solid var(--gold); object-fit:cover;">
+                    <input type="file" id="file_in" style="display:none" onchange="updateImg(this)">
+                    <i class="fas fa-camera" onclick="document.getElementById('file_in').click()" style="position:absolute; bottom:0; right:5px; background:var(--navy); color:white; padding:8px; border-radius:50%; font-size:12px; cursor:pointer;"></i>
                 </div>
-                <h2 id="display_name" style="margin:15px 0 5px 0;">اسم السائق</h2>
-                <p id="display_car" style="color:#666; margin-bottom:20px;">السيارة المستلمة</p>
-                
-                <hr style="opacity:0.1">
-                
-                <div class="form-group" style="margin-top:20px;">
-                    <label><i class="fas fa-shield-alt"></i> كلمة المرور الخاصة بك</label>
-                    <input type="password" id="upd_pass" placeholder="اتركها فارغة إذا لم ترد التغيير">
-                </div>
-                <button class="btn-main" onclick="changeSecurity()">تحديث بيانات الأمان <i class="fas fa-lock"></i></button>
+                <label style="margin-top:20px;">اسم السائق</label><input type="text" id="p_name">
+                <label>رقم الموبايل</label><input type="tel" id="p_phone">
+                <label>تغيير كلمة السر</label><input type="password" id="p_pass">
+                <button class="btn-main" onclick="saveProfileChanges()">تحديث البيانات</button>
+                <button class="btn-main" style="background:#cc0000; color:white; border:none; margin-top:25px;" onclick="location.reload()">تسجيل خروج آمن</button>
             </div>
-            <button class="btn-main" style="background:var(--red); border:none;" onclick="location.reload()">تسجيل خروج 🚪</button>
         </div>
 
-        <div class="bottom-nav">
-            <div class="nav-item active" onclick="showTab('tab_trip', this)"><i class="fas fa-plus-circle"></i><br>رحلة جديدة</div>
-            <div class="nav-item" onclick="showTab('tab_reports', this)"><i class="fas fa-file-invoice-dollar"></i><br>تقريري</div>
-            <div class="nav-item" onclick="showTab('tab_settings', this)"><i class="fas fa-user-shield"></i><br>أماني</div>
+        <div class="nav-bar">
+            <div class="nav-item active" onclick="switchTab('tab_trip', this)"><i class="fas fa-plus-square"></i><br>جديد</div>
+            <div class="nav-item" onclick="switchTab('tab_rep', this)"><i class="fas fa-chart-pie"></i><br>التقارير</div>
+            <div class="nav-item" onclick="switchTab('tab_sec', this)"><i class="fas fa-user-lock"></i><br>الأمان</div>
         </div>
     </div>
 
-    <datalist id="egy_cities">
-        <option value="القاهرة"><option value="الإسكندرية"><option value="الجيزة"><option value="القليوبية"><option value="المنوفية"><option value="الغربية"><option value="الدقهلية"><option value="الشرقية"><option value="البحيرة"><option value="كفر الشيخ"><option value="دمياط"><option value="بورسعيد"><option value="الإسماعيلية"><option value="السويس"><option value="الفيوم"><option value="بني سويف"><option value="المنيا"><option value="أسيوط"><option value="سوهاج"><option value="قنا"><option value="الأقصر"><option value="أسوان"><option value="مطروح"><option value="الوادي الجديد"><option value="البحر الأحمر"><option value="شمال سيناء"><option value="جنوب سيناء">
+    <datalist id="provinces">
+        <option value="الإسكندرية"><option value="القاهرة"><option value="الجيزة"><option value="البحيرة"><option value="الدقهلية"><option value="الغربية"><option value="الشرقية"><option value="المنوفية"><option value="دمياط"><option value="بورسعيد"><option value="السويس"><option value="مطروح"><option value="قنا"><option value="أسوان">
     </datalist>
-    <datalist id="all_clients"></datalist>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAsS-q848fEIsY-Zk86pL1K6eS4C_eCisU",
-            databaseURL: "https://fleetsmart-2513b-default-rtdb.firebaseio.com"
-        };
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = { apiKey: "AIzaSyAsS-q848fEIsY-Zk86pL1K6eS4C_eCisU", databaseURL: "https://fleetsmart-2513b-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let activeDriver = null;
-        let activeCar = null;
+        let currentUser = null;
 
-        // تحميل القوائم من الفايربيز
+        // استيراد البيانات من السحابة للقوائم
         db.ref('drivers').on('value', s => {
-            const sel = document.getElementById('sel_driver'); sel.innerHTML = "";
-            s.forEach(c => sel.innerHTML += `<option value="${c.key}" data-pass="${c.val().pass || '1234'}" data-ratio="${c.val().ratio || 0}">${c.val().name}</option>`);
-        });
-        db.ref('cars').on('value', s => {
-            const sel = document.getElementById('sel_car'); sel.innerHTML = "";
-            s.forEach(c => sel.innerHTML += `<option value="${c.key}">${c.val().plate}</option>`);
+            const el = document.getElementById('sel_driver'); el.innerHTML = '<option value="">اختر اسمك</option>';
+            s.forEach(c => { el.innerHTML += `<option value="${c.key}" data-pass="${c.val().pass || '1234'}" data-ratio="${c.val().ratio || 0}">${c.val().name}</option>`; });
         });
 
-        function processLogin() {
+        db.ref('cars').on('value', s => {
+            const c1 = document.getElementById('sel_car'), c2 = document.getElementById('search_car');
+            c1.innerHTML = '<option value="">اختر السيارة</option>'; c2.innerHTML = '<option value="all">كل الأسطول</option>';
+            s.forEach(c => { const p = c.val().plate; c1.innerHTML += `<option value="${p}">${p}</option>`; c2.innerHTML += `<option value="${p}">${p}</option>`; });
+        });
+
+        // ميزة "السهم الأزرق" للتنقل
+        function nextField(e, nextId) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                const next = document.getElementById(nextId);
+                if (next.tagName === "BUTTON") next.click(); else next.focus();
+            }
+        }
+
+        function doLogin() {
             const sel = document.getElementById('sel_driver');
             const pass = document.getElementById('login_pass').value;
-            const correctPass = sel.selectedOptions[0].dataset.pass;
-
-            if(pass === correctPass) {
-                activeDriver = { id: sel.value, name: sel.selectedOptions[0].text, ratio: Number(sel.selectedOptions[0].dataset.ratio) };
-                activeCar = document.getElementById('sel_car').selectedOptions[0].text;
-                
+            if (pass === sel.selectedOptions[0].dataset.pass) {
+                currentUser = { 
+                    id: sel.value, 
+                    name: sel.selectedOptions[0].text, 
+                    ratio: parseFloat(sel.selectedOptions[0].dataset.ratio) || 0, 
+                    car: document.getElementById('sel_car').value 
+                };
                 document.getElementById('login_page').style.display = 'none';
-                document.getElementById('app_content').style.display = 'block';
-                document.getElementById('display_name').innerText = activeDriver.name;
-                document.getElementById('display_car').innerText = "السيارة: " + activeCar;
-                document.getElementById('tDate').value = new Date().toISOString().slice(0, 16);
-                loadDriverLogs();
-            } else {
-                alert("❌ كلمة السر غير صحيحة!");
-            }
+                document.getElementById('app').style.display = 'block';
+                document.getElementById('t_date').value = new Date().toLocaleString('sv-SE').replace(' ', 'T').slice(0, 16);
+                loadReports();
+            } else { alert("عذراً، كلمة السر غير صحيحة!"); }
         }
 
-        function showTab(id, el) {
+        function loadReports() {
+            db.ref('trips').orderByChild('driverId').equalTo(currentUser.id).on('value', s => {
+                const log = document.getElementById('trips_log');
+                log.innerHTML = "<h4 style='padding-right:10px;'>سجل رحلاتك:</h4>";
+                let totalWork=0, totalMyCut=0, totalDraw=0;
+                const filterDate = document.getElementById('search_date').value;
+                const filterCar = document.getElementById('search_car').value;
+
+                s.forEach(c => {
+                    const t = c.val();
+                    const tripPrice = parseFloat(t.total) || 0;
+                    
+                    // المعادلة المحاسبية: خصم (بنزين، أكل، كارتة) قبل حساب النسبة
+                    let expenseBeforeRatio = 0;
+                    let draws = 0;
+                    if(t.expenses) t.expenses.forEach(e => {
+                        if(['بنزين', 'أكل وخلافه', 'كارتة طريق'].includes(e.type)) expenseBeforeRatio += parseFloat(e.amt) || 0;
+                        if(e.type === 'سحب') draws += parseFloat(e.amt) || 0;
+                    });
+
+                    const netAmount = tripPrice - expenseBeforeRatio;
+                    // نسبة السائق (0 إذا لم يحدد المالك نسبة بعد)
+                    const myShare = (netAmount * (t.ratio || 0)) / 100;
+
+                    if((!filterDate || t.date.includes(filterDate)) && (filterCar === 'all' || t.car === filterCar)) {
+                        totalWork += tripPrice; totalMyCut += myShare; totalDraw += draws;
+                        log.innerHTML += `<div class="card" style="font-size:11px;">
+                            <b>🗓️ ${t.date}</b> | العربية: ${t.car}<br>
+                            الرحلة: ${tripPrice} | الصافي للنسبة: ${netAmount.toFixed(1)} | نسبتي: ${myShare.toFixed(1)} | سحب: ${draws}
+                        </div>`;
+                    }
+                });
+                document.getElementById('sum_work').innerText = totalWork.toFixed(0);
+                document.getElementById('sum_my').innerText = totalMyCut.toFixed(0);
+                document.getElementById('sum_draw').innerText = totalDraw.toFixed(0);
+                document.getElementById('sum_net').innerText = (totalMyCut - totalDraw).toFixed(0);
+            });
+        }
+
+        function uploadTrip() {
+            const price = parseFloat(document.getElementById('t_price').value) || 0;
+            const exps = [];
+            document.querySelectorAll('#expenses_container > div').forEach(row => {
+                const a = parseFloat(row.querySelector('.exp-amt').value) || 0;
+                const t = row.querySelector('.exp-type').value;
+                if(a > 0) exps.push({amt: a, type: t});
+            });
+
+            const tripData = {
+                driverId: currentUser.id, driverName: currentUser.name, car: currentUser.car,
+                total: price, date: document.getElementById('t_date').value,
+                ratio: currentUser.ratio, expenses: exps, timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            db.ref('trips').push(tripData).then(() => {
+                alert("تم إرسال البيانات للسحابة بنجاح ✅");
+                location.reload();
+            }).catch(err => alert("خطأ في الاتصال: " + err));
+        }
+
+        // تحكمات الواجهة
+        function switchTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
-            if(id === 'tab_reports') loadDriverLogs();
+            document.getElementById(id).classList.add('active'); el.classList.add('active');
         }
-
-        function updateCityInputs(val) {
-            document.getElementById('city_single').style.display = (val === 'ذهاب وعودة' || val === 'شغل داخلي') ? 'block' : 'none';
-            document.getElementById('city_double').style.display = (val === 'ذهاب فقط' || val === 'عودة فقط') ? 'block' : 'none';
-        }
-
-        function checkSpecial(val) {
-            document.getElementById('special_client_div').style.display = (val === 'خاصة') ? 'block' : 'none';
-        }
-
-        function checkExpOther(sel) {
-            sel.parentElement.nextElementSibling.style.display = (sel.value === 'أخرى') ? 'block' : 'none';
-        }
-
-        function addNewExpenseField() {
-            const div = document.createElement('div');
-            div.className = 'form-group';
-            div.style.cssText = "border-bottom: 1px solid #eee; padding-bottom:10px; margin-top:10px;";
-            div.innerHTML = `
-                <div style="display:flex; gap:5px;">
-                    <input type="number" class="exp-val" placeholder="المبلغ" style="flex:1">
-                    <select class="exp-type" onchange="checkExpOther(this)" style="flex:1">
-                        <option>بنزين</option><option>كارتة</option><option value="أخرى">أخرى</option>
-                    </select>
-                </div>
-                <input type="text" class="exp-desc" placeholder="التفاصيل..." style="display:none; margin-top:8px;">`;
-            document.getElementById('expense_list').appendChild(div);
-        }
-
-        function submitTrip() {
-            const trip = {
-                driverId: activeDriver.id,
-                driverName: activeDriver.name,
-                car: activeCar,
-                amount: Number(document.getElementById('tAmount').value),
-                date: document.getElementById('tDate').value,
-                status: document.getElementById('tStatus').value,
-                payment: document.getElementById('tPayment').value,
-                app: document.getElementById('tApp').value,
-                driverRatio: activeDriver.ratio,
-                timestamp: Date.now()
-            };
-            db.ref('trips').push(trip).then(() => {
-                alert("تم إرسال الرحلة بنجاح ✅");
-                location.reload();
-            });
-        }
-
-        function loadDriverLogs() {
-            db.ref('trips').orderByChild('driverId').equalTo(activeDriver.id).on('value', s => {
-                const list = document.getElementById('logs_list'); list.innerHTML = "";
-                let day=0, week=0, month=0, year=0;
-                const now = new Date();
-                const filterDate = document.getElementById('filter_date').value;
-                const filterCar = document.getElementById('filter_car').value.toLowerCase();
-
-                s.forEach(child => {
-                    const v = child.val();
-                    const d = new Date(v.date);
-                    const myCut = (v.amount * v.driverRatio) / 100;
-
-                    // تصفية البحث
-                    if(filterDate && v.date.split('T')[0] !== filterDate) return;
-                    if(filterCar && !v.car.toLowerCase().includes(filterCar)) return;
-
-                    // حساب الإحصائيات
-                    if(d.toDateString() === now.toDateString()) day += myCut;
-                    if(d > new Date(now - 7*24*60*60*1000)) week += myCut;
-                    if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) month += myCut;
-                    if(d.getFullYear() === now.getFullYear()) year += myCut;
-
-                    list.innerHTML += `<div class="trip-log-item">
-                        <b>${v.date.replace('T', ' ')}</b><br>
-                        السيارة: ${v.car} | المبلغ: ${v.amount} ج | <span style="color:var(--gold)">نسبتك: ${myCut.toFixed(1)} ج</span>
-                    </div>`;
-                });
-
-                document.getElementById('s_day').innerText = day.toFixed(0);
-                document.getElementById('s_week').innerText = week.toFixed(0);
-                document.getElementById('s_month').innerText = month.toFixed(0);
-                document.getElementById('s_year').innerText = year.toFixed(0);
-            });
-        }
-
-        function changeSecurity() {
-            const newPass = document.getElementById('upd_pass').value;
-            if(newPass) {
-                db.ref('drivers/' + activeDriver.id).update({ pass: newPass }).then(() => {
-                    alert("🔐 تم تحديث كلمة السر بنجاح!");
-                });
-            }
+        function toggleLocFields(v) { document.getElementById('loc2_div').style.display = (v.includes('فقط') ? 'block' : 'none'); }
+        function togglePayFields(v) { document.getElementById('pay_details').style.display = (v !== 'كاش' ? 'block' : 'none'); }
+        function toggleClientFields(v) { document.getElementById('client_details').style.display = (v === 'خاصة' ? 'block' : 'none'); }
+        function handleSiana(el) { document.getElementById('siana_info').style.display = (el.value === 'صيانة' ? 'block' : 'none'); }
+        function addRow() {
+            const div = document.createElement('div'); div.style.display = 'flex'; div.style.gap = '5px'; div.style.marginBottom = '10px';
+            div.innerHTML = `<input type="number" class="exp-amt" placeholder="المبلغ" style="flex:1"><select class="exp-type" style="flex:1"><option>بنزين</option><option>أكل وخلافه</option><option>كارتة طريق</option><option>غيار زيت</option><option>صيانة</option><option value="سحب">سحب نقدي</option></select>`;
+            document.getElementById('expenses_container').appendChild(div);
         }
     </script>
 </body>
-                      </html>
+</html>
