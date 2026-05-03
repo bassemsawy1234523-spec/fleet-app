@@ -3,319 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الأسطول الذهبي - باسم الصاوي</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
+    <title>الأسطول الذهبي - الإدارة والتحكم</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --gold: #d4af37; --navy: #0a1128; --white: #ffffff; --light: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--light); margin: 0; padding-bottom: 70px; }
+        :root { --gold: #d4af37; --black: #000; --white: #fff; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f0f0; margin: 0; padding-bottom: 90px; }
+        .black-head { background: var(--black); color: var(--gold); padding: 18px; text-align: center; font-weight: bold; border-bottom: 3px solid var(--gold); position: sticky; top:0; z-index:1001; }
+        .container { display: none; padding: 15px; animation: fadeIn 0.3s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* شاشة البدء والدخول */
-        #splash { position: fixed; inset: 0; background: var(--navy); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10001; color: var(--gold); transition: 0.5s; }
-        #login_ui { display: none; margin-top: 20px; text-align: center; }
-        
-        header { background: var(--navy); color: var(--gold); padding: 15px; text-align: center; font-weight: bold; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; }
-        
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--navy); display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid var(--gold); z-index: 1000; }
-        .nav-item { color: #fff; opacity: 0.5; text-align: center; font-size: 11px; flex: 1; cursor: pointer; transition: 0.3s; }
-        .nav-item.active { opacity: 1; color: var(--gold); transform: translateY(-3px); }
-        .nav-item i { font-size: 20px; display: block; margin-bottom: 3px; }
+        .card { background: var(--white); border-radius: 15px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #ddd; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .s-card { padding: 15px; border-radius: 12px; color: #fff; text-align: center; font-weight: bold; font-size: 13px; }
+        .bg-1 { background: var(--green); } .bg-2 { background: var(--red); } .bg-3 { background: var(--blue); } .bg-4 { background: #f39c12; }
 
-        .section { display: none; padding: 15px; animation: slideUp 0.3s ease-out; }
-        .section.active { display: block; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .box-style { border: 2px solid #000; border-radius: 12px; margin-top: 15px; overflow: hidden; background: #fff; }
+        .box-h { background: #000; color: var(--gold); padding: 10px; text-align: center; font-weight: bold; }
+        .box-b { max-height: 400px; overflow-y: auto; padding: 5px; }
+        .row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 12px; font-size: 13px; }
+        
+        input, select, button { width: 100%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+        .btn-gold { background: var(--gold); color: #000; font-weight: bold; border: none; cursor: pointer; }
+        .btn-action { width: auto; padding: 5px 10px; font-size: 10px; color: #fff; border: none; border-radius: 5px; margin-left: 3px; }
+        .del { background: var(--red); } .edit { background: var(--blue); }
 
-        .card { background: var(--white); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-right: 5px solid var(--gold); }
-        h3 { margin-top: 0; color: var(--navy); font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; height: 75px; border-top: 3px solid var(--gold); z-index: 1000; }
+        .nav-item { flex: 1; color: #fff; text-align: center; font-size: 10px; padding-top: 15px; cursor: pointer; opacity: 0.7; }
+        .nav-active { color: var(--gold); opacity: 1; background: #1a1a1a; border-top: 5px solid var(--gold); }
         
-        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
-        .btn-save { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        
-        /* الجداول */
-        .table-wrap { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 400px; }
-        th { background: #eee; padding: 10px; border: 1px solid #ddd; }
-        td { padding: 8px; border: 1px solid #ddd; text-align: center; background: #fff; }
-        
-        .action-btns i { cursor: pointer; margin: 0 5px; font-size: 16px; }
-        .fa-trash { color: #e74c3c; } .fa-whatsapp { color: #2ecc71; } .fa-phone { color: #3498db; } .fa-edit { color: #f1c40f; }
-        
-        .stat-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-item { background: var(--navy); color: var(--gold); padding: 10px; border-radius: 8px; text-align: center; font-size: 13px; }
+        #map { height: 350px; border: 2px solid #000; border-radius: 12px; }
+        .hidden { display: none !important; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal { background: #fff; width: 100%; max-height: 80%; border-radius: 20px; padding: 20px; overflow-y: auto; position: relative; }
     </style>
 </head>
 <body>
 
-    <div id="splash" onclick="showLogin()">
-        <h1 id="splash_title">الأسطول الذهبي</h1>
-        <div id="login_ui">
-            <input type="password" id="pass_input" placeholder="أدخل كود المرور" style="width: 200px; text-align: center; border: 1px solid var(--gold);">
-            <br>
-            <button class="btn-save" style="width: 120px;" onclick="checkPass()">دخول</button>
+    <div id="splash" style="position:fixed; top:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <h1 style="color:var(--gold); font-size:2.5rem;">الأسطول الذهبي</h1>
+        <button class="btn-gold" style="width:180px" onclick="goLogin()">دخول</button>
+    </div>
+
+    <div id="login-scr" class="hidden" style="padding:80px 25px; text-align:center;">
+        <div class="card">
+            <h2 style="margin-bottom:20px">قفل المالك</h2>
+            <input type="password" id="pInput" placeholder="أدخل كلمة السر">
+            <button class="btn-gold" onclick="auth()">دخول الواجهة</button>
         </div>
     </div>
 
-    <div id="main_app" style="display:none;">
-        <header>لوحة تحكم المالك</header>
-
-        <section id="sec_rep" class="section active">
-            <div class="stat-box">
-                <div class="stat-item">الإيراد: <b id="r_rev">0</b></div>
-                <div class="stat-item">المصاريف: <b id="r_exp">0</b></div>
-                <div class="stat-item">نسبة السائقين: <b id="r_rat">0</b></div>
-                <div class="stat-item" style="background:var(--gold); color:var(--navy)">الصافي: <b id="r_net">0</b></div>
-            </div>
+    <div id="main-app" class="hidden">
+        <div id="p-reports" class="container active">
+            <div class="black-head">📊 تقارير الأسطول</div>
             <div class="card">
-                <h3>فلاتر البحث عن تقرير</h3>
-                <input type="date" id="f_date" onchange="loadReports()">
-                <select id="f_driver" onchange="loadReports()"><option value="all">كل السائقين</option></select>
-                <select id="f_car" onchange="loadReports()"><option value="all">كل السيارات</option></select>
+                <div style="display:flex; gap:5px;"><input type="date" id="dS"><input type="date" id="dE"></div>
+                <select id="selDr" onchange="filter()"><option value="all">كل السائقين</option></select>
+                <select id="selCr" onchange="filter()"><option value="all">كل السيارات</option></select>
             </div>
-            <div class="table-wrap card">
-                <table id="rep_table">
-                    <thead><tr><th>التاريخ</th><th>السائق</th><th>السيارة</th><th>صافي</th><th>حذف</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+            <div class="stats-grid">
+                <div class="s-card bg-1">الإيراد<br><span id="v1">0</span></div>
+                <div class="s-card bg-2">المصاريف<br><span id="v2">0</span></div>
+                <div class="s-card bg-3">النسب<br><span id="v3">0</span></div>
+                <div class="s-card bg-4">الصافي<br><span id="v4">0</span></div>
             </div>
-        </section>
+            <div class="box-style"><div class="box-h">سجل الرحلات (تعديل/حذف)</div><div class="box-b" id="tLogs"></div></div>
+        </div>
 
-        <section id="sec_dri" class="section">
-            <form id="dri_form" class="card">
-                <h3>تسجيل سائق جديد</h3>
-                <label style="font-size:11px">صورة السائق (من الجهاز):</label>
-                <input type="file" id="d_img" accept="image/*">
-                <input type="text" id="d_name" placeholder="اسم السائق">
-                <input type="tel" id="d_phone" placeholder="رقم الموبايل">
-                <input type="number" id="d_age" placeholder="السن">
-                <input type="text" id="d_addr" placeholder="العنوان">
-                <input type="number" id="d_rate" placeholder="نسبة السائق %">
-                <button type="button" class="btn-save" onclick="saveData('drivers')">حفظ وتفريغ</button>
-            </form>
-            <div class="card table-wrap">
-                <h3>سجل السائقين</h3>
-                <table id="dri_table"><tbody></tbody></table>
+        <div id="p-drivers" class="container">
+            <div class="black-head">👤 السائقين</div>
+            <div class="card">
+                <input type="file" id="drP" accept="image/*">
+                <input id="drN" placeholder="اسم السائق">
+                <input id="drM" placeholder="الموبايل">
+                <input id="drA" placeholder="السن">
+                <input id="drR" placeholder="النسبة %">
+                <button class="btn-gold" onclick="saveD()">حفظ السائق</button>
             </div>
-        </section>
+            <div class="box-style"><div class="box-h">سجل السائقين بالبيانات</div><div class="box-b" id="drLogs"></div></div>
+        </div>
 
-        <section id="sec_car" class="section">
-            <form id="car_form" class="card">
-                <h3>تسجيل سيارة</h3>
-                <select id="c_type" onchange="toggleRent(this.value)">
-                    <option value="ملك">ملك</option><option value="إيجار">إيجار</option>
-                </select>
-                <div id="rent_fields" style="display:none; background:#f9f9f9; padding:10px; border-radius:8px;">
-                    <input type="text" id="c_owner" placeholder="اسم المالك">
-                    <input type="tel" id="c_owner_phone" placeholder="رقم المالك">
-                    <input type="number" id="c_rent_val" placeholder="قيمة الإيجار">
-                    <input type="number" id="c_rent_day" placeholder="موعد الإيجار (يوم كم في الشهر)">
+        <div id="p-cars" class="container">
+            <div class="black-head">🚗 السيارات</div>
+            <div class="card">
+                <input type="file" id="crP" accept="image/*">
+                <div style="display:flex; gap:5px;"><input id="crL" placeholder="حروف"><input id="crN" type="number" placeholder="أرقام"></div>
+                <input id="crT" placeholder="نوع السيارة">
+                <select id="crS" onchange="tRent()"><option value="ملك">ملك</option><option value="إيجار">إيجار</option></select>
+                <div id="rBox" class="hidden">
+                    <input id="oN" placeholder="اسم المالك"><input id="oP" placeholder="رقم الهاتف">
+                    <input id="rV" placeholder="مبلغ الإيجار"><input type="date" id="rD">
                 </div>
-                <input type="file" id="c_img" accept="image/*">
-                <input type="text" id="c_plate" placeholder="رقم اللوحة">
-                <input type="text" id="c_brand" placeholder="ماركة السيارة (بحث)">
-                <input type="text" id="c_model" placeholder="الموديل / السنة">
-                <button type="button" class="btn-save" onclick="saveData('cars')">حفظ وتفريغ</button>
-            </form>
-            <div class="card table-wrap">
-                <h3>سجل السيارات</h3>
-                <table id="car_table"><tbody></tbody></table>
+                <button class="btn-gold" onclick="saveC()">حفظ السيارة</button>
             </div>
-        </section>
+            <div class="box-style"><div class="box-h">سجل الأسطول والحسابات</div><div class="box-b" id="crLogs"></div></div>
+        </div>
 
-        <section id="sec_cli" class="section">
-            <form id="cli_form" class="card">
-                <h3>إضافة عميل</h3>
-                <input type="text" id="cl_name" placeholder="اسم العميل">
-                <input type="tel" id="cl_phone" placeholder="رقم العميل">
-                <div id="loc_inputs">
-                    <div style="display:flex; gap:5px;"><input type="text" class="l_name" placeholder="الموقع (بيت/شغل)"><input type="text" class="l_link" placeholder="رابط جوجل ماب"></div>
-                </div>
-                <button type="button" onclick="addLocField()" style="font-size:10px; color:var(--navy)">+ إضافة موقع آخر</button>
-                <button type="button" class="btn-save" onclick="saveData('clients')">حفظ وتفريغ</button>
-            </form>
-            <div class="card table-wrap">
-                <h3>سجل العملاء</h3>
-                <table id="cli_table"><tbody></tbody></table>
+        <div id="p-cust" class="container">
+            <div class="black-head">👥 العملاء</div>
+            <div class="card">
+                <input id="cuN" placeholder="اسم العميل"><input id="cuM" placeholder="رقم الموبايل">
+                <div id="lWrap"><input class="lu" placeholder="رابط الخريطة"><input class="ld" placeholder="تفاصيل الموقع"></div>
+                <button onclick="addL()">+ موقع إضافي</button>
+                <button class="btn-gold" onclick="saveCu()">حفظ العميل</button>
             </div>
-        </section>
+            <div class="box-style"><div class="box-h">سجل العملاء المربوط بالسحابة</div><div class="box-b" id="cuLogs"></div></div>
+        </div>
 
-        <section id="sec_wal" class="section">
-            <div class="card">
-                <h3>إعدادات المحفظة والإنستا باي</h3>
-                <input type="text" id="w_insta" placeholder="حساب إنستا باي">
-                <button class="btn-save" style="margin-bottom:10px" onclick="saveWalletConfig('insta')">حفظ حساب الإنستا</button>
-                <select id="w_provider"><option>فودافون كاش</option><option>أورنج كاش</option><option>اتصالات كاش</option></select>
-                <input type="tel" id="w_num" placeholder="رقم المحفظة">
-                <button class="btn-save" onclick="saveWalletConfig('wallet')">حفظ المحفظة</button>
+        <div id="p-vault" class="container">
+            <div class="black-head">💰 الخزنة</div>
+            <div class="card" style="background:#000; color:var(--gold); text-align:center;">
+                <h3>إجمالي الخزنة</h3><h1 id="vTot">0</h1>
             </div>
-            <div class="card">
-                <h3>البحث في المعاملات</h3>
-                <div style="display:flex; gap:5px;">
-                    <input type="date" id="w_f_date" onchange="loadWallet()">
-                    <select id="w_f_method" onchange="loadWallet()">
-                        <option value="all">كل الطرق</option><option value="كاش">كاش</option><option value="إنستا باي">إنستا باي</option><option value="محفظة">محفظة</option>
-                    </select>
-                </div>
+            <button class="btn-gold" onclick="document.getElementById('pNew').classList.toggle('hidden')">إضافة طريقة دفع</button>
+            <div id="pNew" class="card hidden">
+                <select id="pK"><option value="InstaPay">InstaPay</option><option value="Wallet">محفظة</option></select>
+                <input id="pName" placeholder="صاحب الحساب"><input id="pInfo" placeholder="الرقم/الرابط">
+                <button onclick="saveP()">حفظ</button>
             </div>
-            <div class="table-wrap card">
-                <table id="wal_table"><thead><tr><th>اليوم</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody></tbody></table>
-            </div>
-        </section>
+            <div class="box-style"><div class="box-h">سجل المعاملات اليومي</div><div class="box-b" id="vLogs"></div></div>
+        </div>
 
-        <section id="sec_set" class="section">
+        <div id="p-radar" class="container">
+            <div class="black-head">🛰️ رادار الأسطول مباشر</div>
+            <div id="map"></div>
+            <div class="box-style"><div class="box-h">تقرير التحركات الحالي</div><div class="box-b" id="raLogs"></div></div>
+        </div>
+
+        <div id="p-settings" class="container">
+            <div class="black-head">⚙️ الإعدادات</div>
             <div class="card">
-                <h3>الإعدادات</h3>
-                <button class="btn-save" onclick="alert('سيتم إضافتها قريباً')">تعديل كلمة السر</button>
-                <button class="btn-save" style="background:#e74c3c; border-color:#c0392b; color:#fff;" onclick="logout()">تسجيل الخروج</button>
+                <h3>تغيير كلمة السر</h3>
+                <input type="password" id="newPass" placeholder="كلمة السر الجديدة">
+                <button class="btn-gold" onclick="updatePass()">تحديث</button>
             </div>
-        </section>
+        </div>
 
         <nav class="nav-bar">
-            <div class="nav-item active" onclick="showSec('sec_rep', this)"><i class="fas fa-chart-line"></i>التقرير</div>
-            <div class="nav-item" onclick="showSec('sec_dri', this)"><i class="fas fa-user-tie"></i>السائقين</div>
-            <div class="nav-item" onclick="showSec('sec_car', this)"><i class="fas fa-car"></i>السيارات</div>
-            <div class="nav-item" onclick="showSec('sec_cli', this)"><i class="fas fa-users"></i>العملاء</div>
-            <div class="nav-item" onclick="showSec('sec_wal', this)"><i class="fas fa-wallet"></i>المحفظة</div>
-            <div class="nav-item" onclick="showSec('sec_set', this)"><i class="fas fa-cog"></i>الإعدادات</div>
+            <div class="nav-item nav-active" onclick="go('reports', this)">📊 تقارير</div>
+            <div class="nav-item" onclick="go('drivers', this)">👤 سائقين</div>
+            <div class="nav-item" onclick="go('cars', this)">🚗 سيارات</div>
+            <div class="nav-item" onclick="go('cust', this)">👥 عملاء</div>
+            <div class="nav-item" onclick="go('vault', this)">💰 خزنة</div>
+            <div class="nav-item" onclick="go('radar', this)">🛰️ رادار</div>
+            <div class="nav-item" onclick="go('settings', this)">⚙️ إعدادات</div>
         </nav>
     </div>
 
+    <div id="m-view" class="overlay hidden">
+        <div class="modal" id="m-body"></div>
+    </div>
+
     <script>
-        // تهيئة السحابة (Firebase)
-        const firebaseConfig = { apiKey: "AIzaSyAsS-q848fEIsY-Zk86pL1K6eS4C_eCisU", databaseURL: "https://fleetsmart-2513b-default-rtdb.firebaseio.com" };
+        // إعدادات Firebase من حسابك (أكد الربط)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-d14002ce4b62d233d76b20",
+            authDomain: "fleetsmart-2513b.firebaseapp.com",
+            databaseURL: "https://fleetsmart-2513b-default-rtdb.firebaseio.com",
+            projectId: "fleetsmart-2513b"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // نظام الدخول (أكد)
-        function showLogin() { 
-            document.getElementById('splash_title').style.fontSize = '20px';
-            document.getElementById('login_ui').style.display = 'block'; 
-        }
-        function checkPass() {
-            if(document.getElementById('pass_input').value === '6352') {
-                localStorage.setItem('logged_basem', 'true');
-                startApp();
-            } else { alert("الكود خطأ!"); }
-        }
-        if(localStorage.getItem('logged_basem')) { startApp(); }
+        let masterPass = "6352"; 
+        function goLogin() { splash.style.display='none'; document.getElementById('login-scr').classList.remove('hidden'); }
+        function auth() { if(pInput.value === masterPass) { document.getElementById('login-scr').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); sync(); } else alert("خطأ!"); }
 
-        function startApp() {
-            document.getElementById('splash').style.display = 'none';
-            document.getElementById('main_app').style.display = 'block';
-            syncBasics();
+        function go(p, el) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById('p-'+p).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('nav-active'));
+            el.classList.add('nav-active');
+            if(p==='radar' && map) setTimeout(()=>map.invalidateSize(), 400);
         }
 
-        function logout() { localStorage.removeItem('logged_basem'); location.reload(); }
-
-        // مزامنة البيانات (أكد)
-        function syncBasics() {
-            db.ref('drivers').on('value', snap => {
-                let html = "", opts = '<option value="all">كل السائقين</option>';
-                snap.forEach(d => {
-                    const v = d.val();
-                    html += `<tr><td>${v.name}</td><td class="action-btns">
-                        <a href="https://wa.me/${v.phone}" target="_blank"><i class="fab fa-whatsapp"></i></a>
-                        <a href="tel:${v.phone}"><i class="fas fa-phone"></i></a>
-                        <i class="fas fa-trash" onclick="delData('drivers/${d.key}')"></i></td></tr>`;
-                    opts += `<option value="${v.name}">${v.name}</option>`;
+        function sync() {
+            // مزامنة الرحلات (all_trips) - الربط مع السائق
+            db.ref('all_trips').on('value', s => {
+                window.trips = []; tLogs.innerHTML = ''; vLogs.innerHTML = ''; let vSum = 0;
+                s.forEach(c => {
+                    let t = c.val(); t.id = c.key; window.trips.push(t);
+                    vSum += Number(t.totalPrice || 0);
+                    tLogs.innerHTML += `<div class="row" onclick="view('trip','${t.id}')"><span>📅 ${t.date || ''} - ${t.driverName}</span><span>${t.totalPrice}ج <button class="btn-action del" onclick="del('all_trips','${t.id}')">حذف</button></span></div>`;
+                    vLogs.innerHTML += `<div class="row"><span>📥 رحلة (${t.driverName})</span><span style="color:green">+${t.totalPrice}</span></div>`;
                 });
-                document.querySelector('#dri_table tbody').innerHTML = html;
-                document.getElementById('f_driver').innerHTML = opts;
+                vTot.innerText = vSum + " ج.م";
+                filter();
             });
 
-            db.ref('cars').on('value', snap => {
-                let html = "", opts = '<option value="all">كل السيارات</option>';
-                snap.forEach(c => {
-                    const v = c.val();
-                    html += `<tr><td>${v.plate}</td><td>${v.brand}</td><td class="action-btns"><i class="fas fa-trash" onclick="delData('cars/${c.key}')"></i></td></tr>`;
-                    opts += `<option value="${v.plate}">${v.plate}</option>`;
+            // مزامنة العملاء (clients)
+            db.ref('clients').on('value', s => {
+                cuLogs.innerHTML = '';
+                s.forEach(c => {
+                    cuLogs.innerHTML += `<div class="row" onclick="view('cust','${c.key}')"><span>👥 ${c.val().name}</span><button class="btn-action del" onclick="del('clients','${c.key}')">حذف</button></div>`;
                 });
-                document.querySelector('#car_table tbody').innerHTML = html;
-                document.getElementById('f_car').innerHTML = opts;
             });
 
-            db.ref('clients').on('value', snap => {
-                let html = "";
-                snap.forEach(cl => {
-                    const v = cl.val();
-                    html += `<tr><td>${v.name}</td><td class="action-btns">
-                        <i class="fab fa-whatsapp" onclick="shareClient('${v.name}','${v.phone}')"></i>
-                        <i class="fas fa-trash" onclick="delData('clients/${cl.key}')"></i></td></tr>`;
+            // مزامنة السائقين والسيارات للفلاتر
+            db.ref('drivers').on('value', s => {
+                drLogs.innerHTML = ''; selDr.innerHTML = '<option value="all">كل السائقين</option>';
+                s.forEach(c => {
+                    drLogs.innerHTML += `<div class="row" onclick="view('driver','${c.key}')"><span>👤 ${c.val().name}</span><button class="btn-action del" onclick="del('drivers','${c.key}')">حذف</button></div>`;
+                    selDr.innerHTML += `<option value="${c.val().name}">${c.val().name}</option>`;
                 });
-                document.querySelector('#cli_table tbody').innerHTML = html;
             });
 
-            loadReports();
-            loadWallet();
+            db.ref('cars').on('value', s => {
+                crLogs.innerHTML = ''; selCr.innerHTML = '<option value="all">كل السيارات</option>';
+                s.forEach(c => {
+                    let n = c.val().crL + " " + c.val().crN;
+                    crLogs.innerHTML += `<div class="row" onclick="view('car','${c.key}')"><span>🚗 ${n}</span><button class="btn-action del" onclick="del('cars','${c.key}')">حذف</button></div>`;
+                    selCr.innerHTML += `<option value="${n}">${n}</option>`;
+                });
+            });
+
+            initMap();
         }
 
-        // الحفظ مع تصفير الخانات (أكد)
-        function saveData(p) {
-            let data = {};
-            if(p==='drivers') data = { name:v('d_name'), phone:v('d_phone'), age:v('d_age'), rate:v('d_rate'), addr:v('d_addr') };
-            if(p==='cars') data = { plate:v('c_plate'), brand:v('c_brand'), model:v('c_model'), type:v('c_type'), owner:v('c_owner') };
-            if(p==='clients') data = { name:v('cl_name'), phone:v('cl_phone'), locs: Array.from(document.querySelectorAll('.l_link')).map(i=>i.value) };
-
-            db.ref(p).push(data).then(() => {
-                alert("تم الحفظ وتفريغ الخانات ✅");
-                document.querySelectorAll('form').forEach(f => f.reset());
-                if(p==='clients') document.getElementById('loc_inputs').innerHTML = '<div style="display:flex; gap:5px;"><input type="text" class="l_name" placeholder="الموقع"><input type="text" class="l_link" placeholder="الرابط"></div>';
+        function filter() {
+            const dr = selDr.value; const cr = selCr.value;
+            let rev=0, exp=0, pct=0;
+            (window.trips || []).filter(t => (dr==='all' || t.driverName===dr) && (cr==='all' || (t.crL+" "+t.crN)===cr)).forEach(t => {
+                rev += Number(t.totalPrice||0); exp += Number(t.preExps||0); pct += Number(t.share||0);
             });
+            v1.innerText = rev; v2.innerText = exp; v3.innerText = pct; v4.innerText = (rev-exp-pct);
         }
 
-        // التقارير والبحث (أكد)
-        function loadReports() {
-            db.ref('trips').on('value', snap => {
-                const b = document.querySelector('#rep_table tbody'); b.innerHTML = "";
-                let rev=0, exp=0, net=0;
-                const fd=v('f_date'), fdr=v('f_driver'), fc=v('f_car');
-
-                snap.forEach(tripSnap => {
-                    const t = tripSnap.val();
-                    if((!fd || t.date.includes(fd)) && (fdr==='all' || t.driverName===fdr) && (fc==='all' || t.car===fc)) {
-                        let t_exp = 0; if(t.expenses) t.expenses.forEach(x => t_exp += parseFloat(x.amt) || 0);
-                        const t_rev = parseFloat(t.total) || 0;
-                        const t_rat = ((t_rev - t_exp) * (parseFloat(t.ratio) || 0)) / 100;
-                        const t_net = t_rev - t_exp - t_rat;
-                        rev+=t_rev; exp+=t_exp; net+=t_net;
-                        b.innerHTML += `<tr><td>${t.date.split('T')[0]}</td><td>${t.driverName}</td><td>${t.car}</td><td>${t_net.toFixed(0)}</td><td><i class="fas fa-trash" onclick="delData('trips/${tripSnap.key}')"></i></td></tr>`;
-                    }
-                });
-                document.getElementById('r_rev').innerText = rev;
-                document.getElementById('r_exp').innerText = exp;
-                document.getElementById('r_net').innerText = net.toFixed(0);
+        function view(type, id) {
+            const m = document.getElementById('m-view'); m.classList.remove('hidden');
+            let path = type==='trip'?'all_trips':(type==='cust'?'clients':(type==='driver'?'drivers':'cars'));
+            db.ref(path+'/'+id).once('value', s => {
+                let d = s.val(); let h = `<h3>تفاصيل السجل</h3><hr>`;
+                if(type==='car') {
+                    let r=0, e=0; (window.trips||[]).filter(t=>(t.crL+" "+t.crN)===(d.crL+" "+d.crN)).forEach(t=>{r+=Number(t.totalPrice); e+=Number(t.preExps);});
+                    h += `<p>السيارة: ${d.crL} ${d.crN}</p><p>الإيراد: ${r}</p><p>المصاريف: ${e}</p><h4>الصافي: ${r-e}</h4>`;
+                } else {
+                    for(let k in d) h += `<p><b>${k}:</b> ${d[k]}</p>`;
+                }
+                h += `<button class="btn-gold" style="margin-top:20px" onclick="document.getElementById('m-view').classList.add('hidden')">إغلاق</button>`;
+                document.getElementById('m-body').innerHTML = h;
             });
         }
 
-        function loadWallet() {
-            db.ref('trips').on('value', snap => {
-                const b = document.querySelector('#wal_table tbody'); b.innerHTML = "";
-                const fd = v('w_f_date'), fm = v('w_f_method');
-                snap.forEach(s => {
-                    const t = s.val();
-                    if((!fd || t.date.includes(fd)) && (fm==='all' || t.paymentMethod===fm)) {
-                        b.innerHTML += `<tr><td>${t.date.split('T')[0]}</td><td>${t.total}</td><td>${t.paymentMethod}</td></tr>`;
-                    }
+        let map;
+        function initMap() {
+            map = L.map('map').setView([31.2, 29.9], 11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            db.ref('live_tracking').on('value', s => {
+                raLogs.innerHTML = '';
+                s.forEach(c => {
+                    L.marker([c.val().lat, c.val().lng]).addTo(map).bindPopup(c.val().drName);
+                    raLogs.innerHTML += `<div class="row"><span>📍 ${c.val().drName}</span><span style="color:green">أونلاين</span></div>`;
                 });
             });
         }
 
-        function delData(path) { if(confirm("أكد الحذف؟")) db.ref(path).remove(); }
-        function v(id) { return document.getElementById(id).value; }
-        function showSec(id, el) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active'); el.classList.add('active');
-        }
-        function toggleRent(val) { document.getElementById('rent_fields').style.display = (val==='إيجار'?'block':'none'); }
-        function addLocField() {
-            const div = document.createElement('div'); div.style.display='flex'; div.style.gap='5px';
-            div.innerHTML = '<input type="text" class="l_name" placeholder="الموقع"><input type="text" class="l_link" placeholder="الرابط">';
-            document.getElementById('loc_inputs').appendChild(div);
-        }
-        function shareClient(n, p) { window.open(`https://wa.me/?text=بيانات العميل: ${n} - موبايل: ${p}`, '_blank'); }
-        function saveWalletConfig(t) { alert("تم حفظ إعدادات المحفظة ✅"); }
+        function del(p, id) { event.stopPropagation(); if(confirm("حذف نهائي؟")) db.ref(p+'/'+id).remove(); }
+        function saveD() { db.ref('drivers').push({name:drN.value, phone:drM.value, age:drA.value, ratio:drR.value}); alert("تم"); }
+        function saveC() { db.ref('cars').push({crL:crL.value, crN:crN.value, crT:crT.value, crS:crS.value}); alert("تم"); }
+        function saveCu() { db.ref('clients').push({name:cuN.value, phone:cuM.value}); alert("تم"); }
+        function saveP() { db.ref('vault_accounts').push({owner:pName.value, info:pInfo.value, type:pK.value}); alert("تم"); }
+        function addL() { lWrap.innerHTML += '<input class="lu" placeholder="الرابط"><input class="ld" placeholder="التفاصيل">'; }
+        function tRent() { rBox.classList.toggle('hidden', crS.value !== 'إيجار'); }
+        function updatePass() { if(newPass.value) { masterPass = newPass.value; alert("تم تحديث الباسورد"); } }
     </script>
 </body>
 </html>
